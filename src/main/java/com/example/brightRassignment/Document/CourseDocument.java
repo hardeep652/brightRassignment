@@ -1,14 +1,17 @@
 package com.example.brightRassignment.Document;
 
-
 import java.time.Instant;
-
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.suggest.Completion;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Document(indexName = "courses")
 public class CourseDocument {
 
@@ -25,7 +28,7 @@ public class CourseDocument {
     private String category;
 
     @Field(type = FieldType.Keyword)
-    private String type; // ONE_TIME, COURSE, CLUB
+    private String type;
 
     @Field(type = FieldType.Keyword)
     private String gradeRange;
@@ -42,32 +45,19 @@ public class CourseDocument {
     @Field(type = FieldType.Date, format = DateFormat.date_time)
     private Instant nextSessionDate;
 
+    @CompletionField
+    private Completion autocomplete;
+
     public CourseDocument() {}
 
-    // getters and setters (generate from your IDE)
-    public String getId()
-     {
-         return id;
-     }
+    // getters and setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public void setId(String id)
-    {
-         this.id = id; 
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() 
-    {
-         return title; 
-    }
-    public void setTitle(String title)
-    {
-         this.title = title; 
-    }
-
-    public String getDescription() 
-    {
-         return description; 
-    }
+    public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
     public String getCategory() { return category; }
@@ -90,5 +80,7 @@ public class CourseDocument {
 
     public Instant getNextSessionDate() { return nextSessionDate; }
     public void setNextSessionDate(Instant nextSessionDate) { this.nextSessionDate = nextSessionDate; }
-}
 
+    public Completion getAutocomplete() { return autocomplete; }
+    public void setAutocomplete(Completion autocomplete) { this.autocomplete = autocomplete; }
+}
