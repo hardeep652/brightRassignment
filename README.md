@@ -1,176 +1,283 @@
-# BrightR Assignment – Java/Spring Boot Elasticsearch
+# BrightR Assignment – Java/Spring Boot + Elasticsearch
+
+> **Note:** This project requires **Elasticsearch version 8.13**. Using any other version may cause compatibility issues between Spring Boot and the Elasticsearch client.
 
 ## Overview
-This project demonstrates a **Spring Boot application integrated with Elasticsearch** to manage and search courses. The system supports:
+This project demonstrates a Spring Boot application integrated with Elasticsearch. It indexes a set of sample “course” documents and exposes REST endpoints for:
 
-- Full-text search
-- Filtering
-- Pagination & sorting
-- Bulk indexing from sample data
+- **Searching courses** with multiple filters, pagination, and sorting (Assignment A)
+- **Autocomplete & fuzzy search** for course titles (Bonus, Assignment B)
 
-The backend exposes RESTful APIs for searching and retrieving course information.
+The application uses **Docker Compose** to spin up a local Elasticsearch instance.
 
-## Prerequisites
-- Java 21+ installed
-- Maven installed
-- Docker & Docker Compose installed
-- Postman or any REST client
+---
 
-## Technologies Used
+## Table of Contents
+1. [Requirements](#requirements)  
+2. [Project Setup](#project-setup)  
+3. [Elasticsearch Setup](#elasticsearch-setup)  
+4. [Sample Data](#sample-data)  
+5. [Running the Application](#running-the-application)  
+6. [API Endpoints](#api-endpoints)  
+7. [Testing & Verification](#testing--verification)  
+8. [Bonus Features](#bonus-features)  
+9. [Project Structure](#project-structure)  
+
+---
+
+## Requirements
 - Java 21
-- Spring Boot
-- Elasticsearch 7.17.9
-- Maven
-- Docker
-- JSON (for sample data)
+- Maven 3.8+
+- Docker & Docker Compose
+- cURL or Postman for API testing
 
 
+---
+
+## Project Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/hardeep652/brightRassignment.git
+cd brightRassignment
+ ```
+
+## Elasticsearch Setup
+
+1. **Start Elasticsearch via Docker Compose:**
+```bash
+docker-compose up -d
+
+##Verify that Elasticsearch is running:
+
+curl http://localhost:9200
+```
+
+## Sample Data
+- File: `src/main/resources/sample-courses.json`
+- Contains 50+ course objects with the following fields:
+  - `id` (unique identifier)
+  - `title` (short text)
+  - `description` (longer text)
+  - `category` (e.g., Math, Science, Art)
+  - `type` (ONE_TIME, COURSE, CLUB)
+  - `gradeRange` (e.g., "1st–3rd")
+  - `minAge` and `maxAge`
+  - `price` (decimal)
+  - `nextSessionDate` (ISO-8601 date-time string)
+
+**Usage:** Data is automatically bulk-indexed into Elasticsearch when the Spring Boot application starts.
 
 
+## Running the Application
 
-
-## PART 2: SAMPLE DATA
-
-The application uses a sample dataset of courses to demonstrate Elasticsearch indexing and search functionality.
-
-### **File Location**
-### **Description**
-- Contains **50+ course objects**  
-- Each course has the following fields:
-
-| Field           | Type    | Description |
-|-----------------|---------|-------------|
-| `id`            | String  | Unique identifier for the course |
-| `title`         | String  | Name of the course |
-| `description`   | String  | Detailed description of the course |
-| `category`      | String  | Category of the course (e.g., Math, Science, Art) |
-| `type`          | String  | ONE_TIME / COURSE / CLUB |
-| `gradeRange`    | String  | Grade levels suitable for the course (e.g., 1-5) |
-| `minAge`        | Integer | Minimum age for the course |
-| `maxAge`        | Integer | Maximum age for the course |
-| `price`         | Double  | Price of the course |
-| `nextSessionDate` | String (ISO Date) | Date and time of the next session |
-
-### **Usage**
-- The data is **automatically bulk-indexed** into Elasticsearch on application startup.  
-- No manual indexing is required.  
-- Example of a single course object:
-
-json
-{
-  "id": "101",
-  "title": "Basic Math",
-  "description": "Introduction to basic math concepts",
-  "category": "Math",
-  "type": "COURSE",
-  "gradeRange": "1-5",
-  "minAge": 5,
-  "maxAge": 10,
-  "price": 100.0,
-  "nextSessionDate": "2025-06-10T15:00:00Z"
-}
-
-## PART 3: RUNNING THE APPLICATION
-
-This section explains how to build and run the Spring Boot application, and how it interacts with Elasticsearch on startup.```
-
-### **Build the Application**
-Use Maven to clean, compile, and package the project:
-
+1. Build the project:
+```bash
 mvn clean install
+```
+
+2.Running the project:
+```bash
 mvn spring-boot:run
+```
+
+## Verify that courses index is populated 
+
+```bash
+curl http://localhost:9200/courses/_search
+```
 
 
-## PART 4: API USAGE
+### 3. **API Endpoints**
+List the endpoints, query parameters, and sample requests/responses. For example:
 
-This section explains the main REST API endpoint for searching courses, including query parameters, sorting, filtering, and pagination.
+```markdown
+## API Endpoints
 
-### **Search Endpoint**
+### Search Courses
+**Endpoint:** `GET /api/search`
 
-**GET** `/api/search`
+**Query Parameters:**
+- `q` – search keyword (title & description)
+- `minAge`, `maxAge`
+- `category`
+- `type`
+- `minPrice`, `maxPrice`
+- `startDate` (ISO-8601)
+- `sort` – `upcoming` (default), `priceAsc`, `priceDesc`
+- `page`, `size` – pagination (default: 0, 10)
+```
+**Example Request:**
+```bash
+curl "http://localhost:8080/api/search?q=math&minAge=6&maxPrice=500&sort=priceAsc&page=0&size=5"
+```
 
-### **Query Parameters**
-
-| Parameter      | Type    | Description |
-|----------------|---------|-------------|
-| `q`            | String  | Search keyword (full-text search) |
-| `minAge`       | Integer | Minimum age filter |
-| `maxAge`       | Integer | Maximum age filter |
-| `category`     | String  | Exact category filter (e.g., Math, Science) |
-| `type`         | String  | Course type: ONE_TIME / COURSE / CLUB |
-| `minPrice`     | Double  | Minimum price filter |
-| `maxPrice`     | Double  | Maximum price filter |
-| `startDate`    | String  | ISO date for filtering courses by next session date |
-| `sort`         | String  | Sorting options: upcoming / priceAsc / priceDesc |
-| `page`         | Integer | Page number for pagination (default: 0) |
-| `size`         | Integer | Page size for pagination (default: 10) |
-
-### **Example Request**
-
-
-- Search for courses with the keyword "math" only (no filters, default pagination):
-GET /api/search?q=math
-### **Example Response 4**
-
+**Example Response**
 ```json
 {
-  "total": 3,
-  "courses": [
-    {
-      "id": "101",
-      "title": "Basic Math",
-      "category": "Math",
-      "price": 100.0,
-      "nextSessionDate": "2025-06-10T15:00:00Z"
-    },
-    {
-      "id": "102",
-      "title": "Advanced Math",
-      "category": "Math",
-      "price": 150.0,
-      "nextSessionDate": "2025-06-15T15:00:00Z"
-    },
-    {
-      "id": "103",
-      "title": "Math for Kids",
-      "category": "Math",
-      "price": 90.0,
-      "nextSessionDate": "2025-06-20T15:00:00Z"
-    }
-  ]
+    "total": 3,
+    "courses": [
+        {
+            "id": "course-012",
+            "title": "Math Club: Olympiad Prep",
+            "description": "Problem solving for math olympiads and contests.",
+            "category": "Math",
+            "type": "CLUB",
+            "gradeRange": "8th–12th",
+            "minAge": 13,
+            "maxAge": 18,
+            "price": 0.0,
+            "nextSessionDate": "2025-09-14T17:30:00Z",
+            "autocomplete": {
+                "input": [
+                    "Math Club: Olympiad Prep"
+                ],
+                "contexts": null,
+                "weight": null
+            }
+        },
+        {
+            "id": "course-021",
+            "title": "Math: Geometry Basics",
+            "description": "Shapes, theorems and proof basics.",
+            "category": "Math",
+            "type": "COURSE",
+            "gradeRange": "7th–9th",
+            "minAge": 12,
+            "maxAge": 15,
+            "price": 10.0,
+            "nextSessionDate": "2025-09-27T09:00:00Z",
+            "autocomplete": {
+                "input": [
+                    "Math: Geometry Basics"
+                ],
+                "contexts": null,
+                "weight": null
+            }
+        },
+        {
+            "id": "course-009",
+            "title": "Advanced Math Problem Solving",
+            "description": "Challenging problems and techniques for high schoolers.",
+            "category": "Math",
+            "type": "COURSE",
+            "gradeRange": "9th–12th",
+            "minAge": 14,
+            "maxAge": 18,
+            "price": 20.0,
+            "nextSessionDate": "2025-09-30T10:00:00Z",
+            "autocomplete": {
+                "input": [
+                    "Advanced Math Problem Solving"
+                ],
+                "contexts": null,
+                "weight": null
+            }
+        }
+    ]
 }
 ```
-## PART 5: VERIFICATION
 
-This section explains how to verify that the courses have been indexed correctly in Elasticsearch and that the search API is working as expected.
+## Bonus Features – Assignment B (Autocomplete & Fuzzy Search)
 
-### **Check Elasticsearch Index**
+### 1. Autocomplete Suggestions
 
-- You can query the `courses` index directly in Elasticsearch to verify data:
-GET http://localhost:9200/courses/_search?pretty
+This feature provides real-time suggestions for course titles as users type.
 
+**Endpoint:** `GET /api/search/suggest?q={partialTitle}`
 
+**Query Parameter:**
+- `q` – partial or beginning of the course title
 
-- This will return all indexed courses in a readable JSON format.
+**Example Request:**
+```bash
+curl "http://localhost:8080/api/search/suggest?q=math"
+```
 
-### **Verify via API**
+**Example Response**
+```json
+[
+    "Math Club: Olympiad Prep",
+    "Math: Geometry Basics"
+]
+```
 
-1. Use **Postman** or any REST client to call the `/api/search` endpoint.  
-2. Test different combinations of:
-   - Search keyword (`q`)  
-   - Filters (`minAge`, `maxAge`, `category`, `type`, `minPrice`, `maxPrice`, `startDate`)  
-   - Sorting (`sort`)  
-   - Pagination (`page` and `size`)  
+## Fuzzy Search
 
-3. Ensure that:
-   - The **total number of hits** matches your expectations.  
-   - The **courses returned** match the filters applied.  
-   - Pagination and sorting work correctly.
+The fuzzy search feature allows users to search for course titles even if there are small typos or misspellings in the search query.
 
-### **Notes**
+**Endpoint:** `GET /api/search`
 
-- Make sure Elasticsearch is running before performing verification.  
-- Any changes in `sample-courses.json` require reindexing (restart the Spring Boot application).  
-- Use simple keyword searches first to verify basic indexing, then test advanced filters and sorting.
+**Query Parameter:**
+- `q` – search keyword (title & description)
+- Fuzziness is automatically applied for minor typos.
 
-## PART A: ASSIGNMENT COMPLETED
+**Example Request with Typo:**
+```bash
+curl "http://localhost:8080/api/search?q=meth"
+```
+
+**Example Response**
+```json
+ {
+    "total": 3,
+    "courses": [
+        {
+            "id": "course-012",
+            "title": "Math Club: Olympiad Prep",
+            "description": "Problem solving for math olympiads and contests.",
+            "category": "Math",
+            "type": "CLUB",
+            "gradeRange": "8th–12th",
+            "minAge": 13,
+            "maxAge": 18,
+            "price": 0.0,
+            "nextSessionDate": "2025-09-14T17:30:00Z",
+            "autocomplete": {
+                "input": [
+                    "Math Club: Olympiad Prep"
+                ],
+                "contexts": null,
+                "weight": null
+            }
+        },
+        {
+            "id": "course-021",
+            "title": "Math: Geometry Basics",
+            "description": "Shapes, theorems and proof basics.",
+            "category": "Math",
+            "type": "COURSE",
+            "gradeRange": "7th–9th",
+            "minAge": 12,
+            "maxAge": 15,
+            "price": 10.0,
+            "nextSessionDate": "2025-09-27T09:00:00Z",
+            "autocomplete": {
+                "input": [
+                    "Math: Geometry Basics"
+                ],
+                "contexts": null,
+                "weight": null
+            }
+        },
+        {
+            "id": "course-009",
+            "title": "Advanced Math Problem Solving",
+            "description": "Challenging problems and techniques for high schoolers.",
+            "category": "Math",
+            "type": "COURSE",
+            "gradeRange": "9th–12th",
+            "minAge": 14,
+            "maxAge": 18,
+            "price": 20.0,
+            "nextSessionDate": "2025-09-30T10:00:00Z",
+            "autocomplete": {
+                "input": [
+                    "Advanced Math Problem Solving"
+                ],
+                "contexts": null,
+                "weight": null
+            }
+        }
+    ]
+}
+```
